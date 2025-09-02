@@ -1,0 +1,88 @@
+# docker-compose.yml
+services:
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672" # RabbitMQ message broker
+      - "15672:15672" # Management UI
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000" # API port
+      - "9001:9001" # Console port
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: davidwagih
+      POSTGRES_PASSWORD: Sha2loba123$$
+      POSTGRES_DB: jobsdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: ./services/api/Dockerfile
+    environment:
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      DATABASE_URL: postgres://davidwagih:Sha2loba123$$@postgres:5432/jobsdb
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_BUCKET: images
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - rabbitmq
+      - postgres
+      - minio
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./services/worker/Dockerfile
+    environment:
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      DATABASE_URL: postgres://davidwagih:Sha2loba123@postgres:5432/jobsdb
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_BUCKET: images
+    depends_on:
+      - redis
+      - rabbitmq
+      - postgres
+      - minio
+
+  status:
+    build:
+      context: .
+      dockerfile: ./services/status/Dockerfile
+    environment:
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "8001:8001"
+    depends_on:
+      - redis
+
+volumes:
+  postgres_data:
+  minio_data:
