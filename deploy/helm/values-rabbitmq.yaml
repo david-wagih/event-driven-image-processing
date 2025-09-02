@@ -1,0 +1,40 @@
+# RabbitMQ Helm Values for Image Processing Pipeline
+# Customized for Minikube deployment
+
+# Authentication
+auth:
+  username: user
+  password: "password123"
+  erlangCookie: "SWQOKODSQALRPCLNMEQG"
+
+# Service configuration
+service:
+  type: ClusterIP
+  managementPort: 15672
+
+# Persistence
+persistence:
+  enabled: false
+
+# Resource limits
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "200m"
+
+# Security context
+securityContext:
+  enabled: true
+  runAsUser: 1001
+  fsGroup: 1001
+
+# Pod security context
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+# Extra environment variables
+extraEnvVars: []

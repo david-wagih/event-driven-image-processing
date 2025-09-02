@@ -1,0 +1,45 @@
+# MinIO Helm Values for Image Processing Pipeline
+# Customized for Minikube deployment
+
+# Authentication
+auth:
+  rootUser: "minioadmin"
+  rootPassword: "minioadmin123"
+
+# Service configuration
+service:
+  type: ClusterIP
+  apiPort: 9000
+  consolePort: 9001
+
+# Persistence
+persistence:
+  enabled: false
+
+# Resource limits
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "200m"
+
+# Security context
+securityContext:
+  enabled: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# Pod security context
+podSecurityContext:
+  enabled: true
+  fsGroup: 1000
+
+# Default bucket
+defaultBuckets: "images"
+
+# Extra environment variables
+extraEnvVars:
+  - name: MINIO_BROWSER_REDIRECT_URL
+    value: "http://localhost:9001"

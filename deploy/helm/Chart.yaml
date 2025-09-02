@@ -1,0 +1,17 @@
+apiVersion: v2
+name: image-pipeline
+description: Event-driven image processing pipeline with microservices
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+keywords:
+  - image-processing
+  - microservices
+  - event-driven
+  - go
+
+maintainers:
+  - name: David Wageh
+    email: david.wageh@example.com
+

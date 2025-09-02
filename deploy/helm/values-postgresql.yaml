@@ -1,0 +1,47 @@
+# PostgreSQL Helm Values for Image Processing Pipeline
+# Customized for Minikube deployment
+
+# Authentication
+auth:
+  postgresPassword: "Sha2loba123$$"
+  database: "jobsdb"
+  username: "davidwagih"
+  password: "Sha2loba123$$"
+
+# Service configuration
+service:
+  type: ClusterIP
+
+# Persistence
+persistence:
+  enabled: false
+
+# Resource limits
+resources:
+  requests:
+    memory: "256Mi"
+    cpu: "100m"
+  limits:
+    memory: "512Mi"
+    cpu: "200m"
+
+# Security context
+securityContext:
+  enabled: true
+  runAsUser: 1001
+  fsGroup: 1001
+
+# Pod security context
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+
+# Primary configuration
+primary:
+  extraEnvVars:
+    - name: POSTGRES_DB
+      value: "jobsdb"
+    - name: POSTGRES_USER
+      value: "davidwagih"
+    - name: POSTGRES_PASSWORD
+      value: "Sha2loba123$$"

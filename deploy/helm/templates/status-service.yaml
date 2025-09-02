@@ -1,0 +1,22 @@
+{{- if .Values.status.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "image-pipeline.fullname" . }}-status
+  labels:
+    {{- include "image-pipeline.labels" . | nindent 4 }}
+    app.kubernetes.io/component: status
+spec:
+  type: {{ .Values.status.service.type }}
+  ports:
+    - port: {{ .Values.status.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      {{- if eq .Values.status.service.type "NodePort" }}
+      nodePort: {{ .Values.status.service.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "image-pipeline.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: status
+{{- end }}

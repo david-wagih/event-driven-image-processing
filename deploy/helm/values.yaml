@@ -1,0 +1,135 @@
+# Image Pipeline Helm Values
+# Main configuration for the image processing pipeline
+
+# Global settings
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: ""
+
+# Infrastructure services
+redis:
+  enabled: false  # We'll deploy separately for more control
+rabbitmq:
+  enabled: false  # We'll deploy separately for more control
+minio:
+  enabled: false  # We'll deploy separately for more control
+postgresql:
+  enabled: false  # We'll deploy separately for more control
+
+# API Service
+api:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: image-pipeline-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  service:
+    type: NodePort
+    port: 8000
+    nodePort: 30080
+  
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+  
+  env:
+    REDIS_URL: "redis://:xs9IIGpeb7@redis-master.image-pipeline.svc.cluster.local:6379"
+    RABBITMQ_URL: "amqp://user:password123@rabbitmq.image-pipeline.svc.cluster.local:5672/"
+    DATABASE_URL: "postgres://davidwagih:Sha2loba123$$@postgresql.image-pipeline.svc.cluster.local:5432/jobsdb"
+    MINIO_ENDPOINT: "minio.image-pipeline.svc.cluster.local:9000"
+    MINIO_ACCESS_KEY: "minioadmin"
+    MINIO_SECRET_KEY: "minioadmin123"
+    MINIO_BUCKET: "images"
+    API_ADDR: ":8000"
+
+# Worker Service
+worker:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: image-pipeline-worker
+    tag: latest
+    pullPolicy: IfNotPresent
+  
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "300m"
+  
+  env:
+    REDIS_URL: "redis://:xs9IIGpeb7@redis-master.image-pipeline.svc.cluster.local:6379"
+    RABBITMQ_URL: "amqp://user:password123@rabbitmq.image-pipeline.svc.cluster.local:5672/"
+    DATABASE_URL: "postgres://davidwagih:Sha2loba123$$@postgresql.image-pipeline.svc.cluster.local:5432/jobsdb"
+    MINIO_ENDPOINT: "minio.image-pipeline.svc.cluster.local:9000"
+    MINIO_ACCESS_KEY: "minioadmin"
+    MINIO_SECRET_KEY: "minioadmin123"
+    MINIO_BUCKET: "images"
+
+# Status Service
+status:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: image-pipeline-status
+    tag: latest
+    pullPolicy: Never
+  
+  service:
+    type: NodePort
+    port: 8001
+    nodePort: 30081
+  
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "25m"
+    limits:
+      memory: "128Mi"
+      cpu: "100m"
+  
+  env:
+    REDIS_URL: "redis://:xs9IIGpeb7@redis-master.image-pipeline.svc.cluster.local:6379"
+    STATUS_ADDR: ":8001"
+
+# Ingress configuration
+ingress:
+  enabled: false  # We'll use NodePort for Minikube
+  className: ""
+  annotations: {}
+  hosts:
+    - host: image-pipeline.local
+      paths:
+        - path: /api
+          pathType: Prefix
+        - path: /status
+          pathType: Prefix
+  tls: []
+
+# Service account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Pod security context
+podSecurityContext:
+  fsGroup: 1000
+
+# Container security context
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000

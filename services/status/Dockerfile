@@ -1,31 +1,24 @@
-FROM golang:1.24-alpine AS builder
+# ---- Build stage ----
+FROM golang:1.24.3 AS builder
 
 WORKDIR /app
 
-# Copy go mod files
+# Copy go mod files from root project
 COPY go.mod go.sum ./
-
-# Download dependencies
 RUN go mod download
 
-# Copy source code
+# Copy the entire project (so dependencies resolve)
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o status ./services/status
+# Build the status binary
+WORKDIR /app/services/status
+RUN go build -o /status main.go
 
-# Final stage
-FROM alpine:latest
+# ---- Runtime stage ----
+FROM gcr.io/distroless/base-debian12
 
-RUN apk --no-cache add ca-certificates
+WORKDIR /app
+COPY --from=builder /status /app/status
 
-WORKDIR /root/
-
-# Copy the binary from builder stage
-COPY --from=builder /app/status .
-
-# Expose port
 EXPOSE 8001
-
-# Run the binary
-CMD ["./status"]
+CMD ["/app/status"]

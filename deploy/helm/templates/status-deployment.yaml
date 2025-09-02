@@ -1,0 +1,57 @@
+{{- if .Values.status.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "image-pipeline.fullname" . }}-status
+  labels:
+    {{- include "image-pipeline.labels" . | nindent 4 }}
+    app.kubernetes.io/component: status
+spec:
+  replicas: {{ .Values.status.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "image-pipeline.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: status
+  template:
+    metadata:
+      labels:
+        {{- include "image-pipeline.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: status
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "image-pipeline.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-status
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.status.image.repository }}:{{ .Values.status.image.tag }}"
+          imagePullPolicy: {{ .Values.status.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8001
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.status.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.status.resources | nindent 12 }}
+{{- end }}
